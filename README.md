@@ -15,3 +15,6 @@ Supported parameters include:
  - `port`: port to listen on (default: `8100`)
  - `ups`: name of the monitored ups  (default: `none`)
  - `upsc`: path to the upsc executable (default: rely on `$PATH`)
+ 
+ ## Running in docker
+    docker run -d --net=host quay.io/klippo/nut_exporter -ups <upsname>[@<hostname>[:<port>]]
