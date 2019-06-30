@@ -17,4 +17,4 @@ Supported parameters include:
  - `upsc`: path to the upsc executable (default: rely on `$PATH`)
  
  ## Running in docker
-    docker run -d -p 8100:8100 -v /bin/upsc:/bin/upsc:ro quay.io/klippo/nut_exporter -ups <upsname>
+    docker run -d --net=host quay.io/klippo/nut_exporter -ups <upsname>[@<hostname>[:<port>]]

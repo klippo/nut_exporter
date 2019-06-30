@@ -15,57 +15,108 @@ import (
 // Regex
 var(
 	batteryChargeRegex          =   regexp.MustCompile(`(?:battery[.]charge:(?:\s)(.*))`)
+	batteryChargeLowRegex       =   regexp.MustCompile(`(?:battery[.]charge.low:(?:\s)(.*))`)
+	batteryChargeWarningRegex   =   regexp.MustCompile(`(?:battery[.]charge.warning:(?:\s)(.*))`)
 	batteryPacksRegex           =   regexp.MustCompile(`(?:battery[.]packs:(?:\s)(.*))`)
+	batteryRuntimeRegex         =   regexp.MustCompile(`(?:battery[.]runtime:(?:\s)(.*))`)
+	batteryRuntimeLowRegex      =   regexp.MustCompile(`(?:battery[.]runtime.low:(?:\s)(.*))`)
+	batteryTemperatureRegex     =   regexp.MustCompile(`(?:battery[.]temperature:(?:\s)(.*))`)
 	batteryVoltageRegex         =   regexp.MustCompile(`(?:battery[.]voltage:(?:\s)(.*))`)
 	batteryVoltageNominalRegex  =   regexp.MustCompile(`(?:battery[.]voltage[.]nominal:(?:\s)(.*))`)
+	inputTransferLowRegex       =   regexp.MustCompile(`(?:input[.]transfer.low:(?:\s)(.*))`)
+	inputTransferHighRegex      =   regexp.MustCompile(`(?:input[.]transfer.high:(?:\s)(.*))`)
 	inputVoltageRegex           =   regexp.MustCompile(`(?:input[.]voltage:(?:\s)(.*))`)
 	inputVoltageNominalRegex    =   regexp.MustCompile(`(?:input[.]voltage[.]nominal:(?:\s)(.*))`)
+	outputCurrentRegex          =   regexp.MustCompile(`(?:output[.]current:(?:\s)(.*))`)
+	outputFrequencyRegex        =   regexp.MustCompile(`(?:output[.]frequency:(?:\s)(.*))`)
 	outputVoltageRegex          =   regexp.MustCompile(`(?:output[.]voltage:(?:\s)(.*))`)
 	outputVoltageNominalRegex   =   regexp.MustCompile(`(?:output[.]voltage[.]nominal:(?:\s)(.*))`)
-	upsPowerNominalRegex        =   regexp.MustCompile(`(?:ups[.]power[.]nominal:(?:\s)(.*))`)
-	upsTempRegex                =   regexp.MustCompile(`(?:ups[.]temperature:(?:\s)(.*))`)
 	upsLoadRegex                =   regexp.MustCompile(`(?:ups[.]load:(?:\s)(.*))`)
+	upsPowerNominalRegex        =   regexp.MustCompile(`(?:ups[.]power[.]nominal:(?:\s)(.*))`)
 	upsStatusRegex              =   regexp.MustCompile(`(?:ups[.]status:(?:\s)(.*))`)
+	upsTempRegex                =   regexp.MustCompile(`(?:ups[.]temperature:(?:\s)(.*))`)
 )
 // NUT Gauges
 var (
 	batteryCharge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "battery_charge",
+		Name: "ups_battery_charge",
 		Help: "Current battery charge (percent)",
 	})
-	
+
+	batteryChargeLow = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_battery_charge_low",
+		Help: "Current battery charge (percent)",
+	})
+
+	batteryChargeWarning = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_battery_charge_warning",
+		Help: "Current battery charge (percent)",
+	})
+
 	batteryPacks = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "battery_pack",
+		Name: "ups_battery_pack",
 		Help: "Number of battery packs on the UPS",
 	})
 
+	batteryRuntime = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_battery_runtime",
+		Help: "Current battery charge (percent)",
+	})
+
+	batteryRuntimeLow = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_battery_runtime_low",
+		Help: "Current battery charge (percent)",
+	})
+
+	batteryTemperature = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_battery_temperature",
+		Help: "Current battery charge (percent)",
+	})
+
 	batteryVoltage = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "battery_voltage",
+		Name: "ups_battery_voltage",
 		Help: "Current battery voltage",
 	})
 
 	batteryVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "battery_voltage_nominal",
+		Name: "ups_battery_voltage_nominal",
 		Help: "Nominal battery voltage",
 	})
 
+	inputTransferLow = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_input_transfer_low",
+		Help: "Current input voltage",
+	})
+	inputTransferHigh = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_input_transfer_high",
+		Help: "Current input voltage",
+	})
+
 	inputVoltage = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "input_voltage",
+		Name: "ups_input_voltage",
 		Help: "Current input voltage",
 	})
 
 	inputVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "input_voltage_nominal",
+		Name: "ups_input_voltage_nominal",
 		Help: "Nominal input voltage",
 	})
 
+	outputCurrent = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_output_current",
+		Help: "Current output voltage",
+	})
+	outputFrequency = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "ups_output_frequency",
+		Help: "Current output voltage",
+	})
 	outputVoltage = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "output_voltage",
+		Name: "ups_output_voltage",
 		Help: "Current output voltage",
 	})
 	
 	outputVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "output_voltage_nominal",
+		Name: "ups_output_voltage_nominal",
 		Help: "Nominal output voltage",
 	})
 	
@@ -92,18 +143,27 @@ var (
 
 func recordMetrics(upscBinary string, upsArg string){
 	prometheus.MustRegister(batteryCharge)
-	prometheus.MustRegister(batteryPacks) 
+	prometheus.MustRegister(batteryChargeLow)
+	prometheus.MustRegister(batteryChargeWarning)
+	prometheus.MustRegister(batteryPacks)
+	prometheus.MustRegister(batteryRuntime)
+	prometheus.MustRegister(batteryRuntimeLow)
+	prometheus.MustRegister(batteryTemperature)
 	prometheus.MustRegister(batteryVoltage)
 	prometheus.MustRegister(batteryVoltageNominal)
+	prometheus.MustRegister(inputTransferLow)
+	prometheus.MustRegister(inputTransferHigh)
 	prometheus.MustRegister(inputVoltage)
 	prometheus.MustRegister(inputVoltageNominal)
+	prometheus.MustRegister(outputCurrent)
+	prometheus.MustRegister(outputFrequency)
 	prometheus.MustRegister(outputVoltage)
 	prometheus.MustRegister(outputVoltageNominal)
-	prometheus.MustRegister(upsPowerNominal)
-	prometheus.MustRegister(upsTemp)
 	prometheus.MustRegister(upsLoad)
+	prometheus.MustRegister(upsPowerNominal)
 	prometheus.MustRegister(upsStatus)
-	
+	prometheus.MustRegister(upsTemp)
+
 	go func(){
 		for {
 			upsOutput, err := exec.Command(upscBinary , upsArg).Output()
@@ -117,15 +177,50 @@ func recordMetrics(upscBinary string, upsArg string){
 			} else {
 				batteryChargeValue, _ := strconv.ParseFloat(batteryChargeRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				batteryCharge.Set(batteryChargeValue)
-			} 
-			
+			}
+
+			if batteryChargeLowRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(batteryChargeLow)
+			} else {
+				batteryChargeLowValue, _ := strconv.ParseFloat(batteryChargeLowRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				batteryChargeLow.Set(batteryChargeLowValue)
+
+			}
+			if batteryChargeWarningRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(batteryChargeWarning)
+			} else {
+				batteryChargeWarningValue, _ := strconv.ParseFloat(batteryChargeWarningRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				batteryChargeWarning.Set(batteryChargeWarningValue)
+			}
+
 			if batteryPacksRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(batteryPacks)
 			} else {
 				batteryPacksValue, _ := strconv.ParseFloat(batteryPacksRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				batteryPacks.Set(batteryPacksValue)
 			}
-		
+
+			if batteryRuntimeRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(batteryRuntime)
+			} else {
+				batteryRuntimeValue, _ := strconv.ParseFloat(batteryRuntimeRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				batteryRuntime.Set(batteryRuntimeValue)
+			}
+
+			if batteryRuntimeLowRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(batteryRuntimeLow)
+			} else {
+				batteryRuntimeLowValue, _ := strconv.ParseFloat(batteryRuntimeLowRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				batteryRuntimeLow.Set(batteryRuntimeLowValue)
+			}
+
+			if batteryTemperatureRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(batteryTemperature)
+			} else {
+				batteryTemperatureValue, _ := strconv.ParseFloat(batteryTemperatureRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				batteryTemperature.Set(batteryTemperatureValue)
+			}
+
 			if batteryVoltageRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(batteryVoltage)
 			} else {
@@ -139,7 +234,21 @@ func recordMetrics(upscBinary string, upsArg string){
 				batteryVoltageNominalValue, _ := strconv.ParseFloat(batteryVoltageNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				batteryVoltageNominal.Set(batteryVoltageNominalValue)
 			}
-			
+
+			if inputTransferLowRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(inputTransferLow)
+			} else {
+				inputTransferLowValue, _ := strconv.ParseFloat(inputTransferLowRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				inputTransferLow.Set(inputTransferLowValue)
+			}
+
+			if inputTransferHighRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(inputTransferHigh)
+			} else {
+				inputTransferHighValue, _ := strconv.ParseFloat(inputTransferHighRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				inputTransferHigh.Set(inputTransferHighValue)
+			}
+
 			if inputVoltageRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(inputVoltage)
 			} else {
@@ -153,7 +262,21 @@ func recordMetrics(upscBinary string, upsArg string){
 				inputVoltageNominalValue, _ := strconv.ParseFloat(inputVoltageNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				inputVoltageNominal.Set(inputVoltageNominalValue)
 			}
-			
+
+			if outputCurrentRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(outputCurrent)
+			} else {
+				outputCurrentValue, _ := strconv.ParseFloat(outputCurrentRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				outputCurrent.Set(outputCurrentValue)
+			}
+
+			if outputFrequencyRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(outputFrequency)
+			} else {
+				outputFrequencyValue, _ := strconv.ParseFloat(outputFrequencyRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				outputFrequency.Set(outputFrequencyValue)
+			}
+
 			if outputVoltageRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(outputVoltage)
 			} else {
