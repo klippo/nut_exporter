@@ -14,4 +14,8 @@ RUN go build -o /go/bin/nut_exporter
 FROM alpine:3.10
 COPY --from=builder /go/bin/nut_exporter /bin
 
-CMD /bin/nut_exporter
+RUN echo "http://dl-cdn.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN apk add --no-cache nut
+RUN ln -sf /usr/bin/upsc /bin/upsc
+
+ENTRYPOINT ["/bin/nut_exporter"] 
