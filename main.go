@@ -39,104 +39,104 @@ var(
 // NUT Gauges
 var (
 	batteryCharge = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_charge",
+		Name: "nut_battery_charge",
 		Help: "Current battery charge (percent)",
 	})
 
 	batteryChargeLow = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_charge_low",
+		Name: "nut_battery_charge_low",
 		Help: "Current battery charge (percent)",
 	})
 
 	batteryChargeWarning = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_charge_warning",
+		Name: "nut_battery_charge_warning",
 		Help: "Current battery charge (percent)",
 	})
 
 	batteryPacks = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_pack",
+		Name: "nut_battery_pack",
 		Help: "Number of battery packs on the UPS",
 	})
 
 	batteryRuntime = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_runtime",
+		Name: "nut_battery_runtime",
 		Help: "Current battery charge (percent)",
 	})
 
 	batteryRuntimeLow = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_runtime_low",
+		Name: "nut_battery_runtime_low",
 		Help: "Current battery charge (percent)",
 	})
 
 	batteryTemperature = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_temperature",
+		Name: "nut_battery_temperature",
 		Help: "Current battery charge (percent)",
 	})
 
 	batteryVoltage = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_voltage",
+		Name: "nut_battery_voltage",
 		Help: "Current battery voltage",
 	})
 
 	batteryVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_battery_voltage_nominal",
+		Name: "nut_battery_voltage_nominal",
 		Help: "Nominal battery voltage",
 	})
 
 	inputTransferLow = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_input_transfer_low",
+		Name: "nut_input_transfer_low",
 		Help: "Current input voltage",
 	})
 	inputTransferHigh = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_input_transfer_high",
+		Name: "nut_input_transfer_high",
 		Help: "Current input voltage",
 	})
 
 	inputVoltage = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_input_voltage",
+		Name: "nut_input_voltage",
 		Help: "Current input voltage",
 	})
 
 	inputVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_input_voltage_nominal",
+		Name: "nut_input_voltage_nominal",
 		Help: "Nominal input voltage",
 	})
 
 	outputCurrent = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_output_current",
+		Name: "nut_output_current",
 		Help: "Current output voltage",
 	})
 	outputFrequency = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_output_frequency",
+		Name: "nut_output_frequency",
 		Help: "Current output voltage",
 	})
 	outputVoltage = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_output_voltage",
+		Name: "nut_output_voltage",
 		Help: "Current output voltage",
 	})
 	
 	outputVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_output_voltage_nominal",
+		Name: "nut_output_voltage_nominal",
 		Help: "Nominal output voltage",
 	})
 	
 	upsPowerNominal = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_power_nominal",
+		Name: "nut_ups_power_nominal",
 		Help: "Nominal ups power",
 	})
 	
 	upsTemp = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_temp",
+		Name: "nut_ups_temp",
 		Help: "UPS Temperature (degrees C)",
 	})
 	
 	upsLoad = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_load",
+		Name: "nut_ups_load",
 		Help: "Current UPS load (percent)",
 	})
 
 	upsStatus = prometheus.NewGauge(prometheus.GaugeOpts{
-		Name: "ups_status",
+		Name: "nut_ups_status",
 		Help: "Current UPS Status (0=Calibration, 1=SmartTrim, 2=SmartBoost, 3=Online, 4=OnBattery, 5=Overloaded, 6=LowBattery, 7=ReplaceBattery, 8=OnBypass, 9=Off, 10=Charging, 11=Discharging)",
 	})
 )
