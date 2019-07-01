@@ -16,5 +16,9 @@ Supported parameters include:
  - `ups`: name of the monitored ups  (default: `none`)
  - `upsc`: path to the upsc executable (default: rely on `$PATH`)
  
- ## Running in docker
+## Running in docker
     docker run -d --net=host quay.io/klippo/nut_exporter -ups <upsname>[@<hostname>[:<port>]]
+
+
+## Grafana Dashboard
+ Available in [dashboards/](dashboards/)
