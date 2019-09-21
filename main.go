@@ -33,6 +33,7 @@ var(
 	outputVoltageNominalRegex   =   regexp.MustCompile(`(?:output[.]voltage[.]nominal:(?:\s)(.*))`)
 	upsLoadRegex                =   regexp.MustCompile(`(?:ups[.]load:(?:\s)(.*))`)
 	upsPowerNominalRegex        =   regexp.MustCompile(`(?:ups[.]power[.]nominal:(?:\s)(.*))`)
+	upsRealPowerNominalRegex        =   regexp.MustCompile(`(?:ups[.]realpower[.]nominal:(?:\s)(.*))`)
 	upsStatusRegex              =   regexp.MustCompile(`(?:ups[.]status:(?:\s)(.*))`)
 	upsTempRegex                =   regexp.MustCompile(`(?:ups[.]temperature:(?:\s)(.*))`)
 )
@@ -125,6 +126,11 @@ var (
 		Help: "Nominal ups power",
 	})
 	
+	upsRealPowerNominal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "nut_ups_realpower_nominal",
+		Help: "Nominal ups realpower",
+	})
+	
 	upsTemp = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "nut_ups_temp",
 		Help: "UPS Temperature (degrees C)",
@@ -161,6 +167,7 @@ func recordMetrics(upscBinary string, upsArg string){
 	prometheus.MustRegister(outputVoltageNominal)
 	prometheus.MustRegister(upsLoad)
 	prometheus.MustRegister(upsPowerNominal)
+	prometheus.MustRegister(upsRealPowerNominal)
 	prometheus.MustRegister(upsStatus)
 	prometheus.MustRegister(upsTemp)
 
@@ -296,6 +303,13 @@ func recordMetrics(upscBinary string, upsArg string){
 			} else {
 				upsPowerNominalValue, _ := strconv.ParseFloat(upsPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				upsPowerNominal.Set(upsPowerNominalValue)
+			}
+			
+			if upsRealPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(upsRealPowerNominal)
+			} else {
+				upsRealPowerNominalValue, _ := strconv.ParseFloat(upsRealPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				upsRealPowerNominal.Set(upsRealPowerNominalValue)
 			}
 			
 			if upsTempRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
