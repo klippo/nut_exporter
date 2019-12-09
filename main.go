@@ -1,41 +1,45 @@
 package main
 
 import (
-	"strconv"
-	"os/exec"
- 	"time"
-	"fmt"
 	"flag"
-	"regexp"
+	"fmt"
 	"net/http"
+	"os/exec"
+	"regexp"
+	"strconv"
+	"time"
+
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 	"github.com/prometheus/common/log"
 )
+
 // Regex
-var(
-	batteryChargeRegex          =   regexp.MustCompile(`(?:battery[.]charge:(?:\s)(.*))`)
-	batteryChargeLowRegex       =   regexp.MustCompile(`(?:battery[.]charge.low:(?:\s)(.*))`)
-	batteryChargeWarningRegex   =   regexp.MustCompile(`(?:battery[.]charge.warning:(?:\s)(.*))`)
-	batteryPacksRegex           =   regexp.MustCompile(`(?:battery[.]packs:(?:\s)(.*))`)
-	batteryRuntimeRegex         =   regexp.MustCompile(`(?:battery[.]runtime:(?:\s)(.*))`)
-	batteryRuntimeLowRegex      =   regexp.MustCompile(`(?:battery[.]runtime.low:(?:\s)(.*))`)
-	batteryTemperatureRegex     =   regexp.MustCompile(`(?:battery[.]temperature:(?:\s)(.*))`)
-	batteryVoltageRegex         =   regexp.MustCompile(`(?:battery[.]voltage:(?:\s)(.*))`)
-	batteryVoltageNominalRegex  =   regexp.MustCompile(`(?:battery[.]voltage[.]nominal:(?:\s)(.*))`)
-	inputTransferLowRegex       =   regexp.MustCompile(`(?:input[.]transfer.low:(?:\s)(.*))`)
-	inputTransferHighRegex      =   regexp.MustCompile(`(?:input[.]transfer.high:(?:\s)(.*))`)
-	inputVoltageRegex           =   regexp.MustCompile(`(?:input[.]voltage:(?:\s)(.*))`)
-	inputVoltageNominalRegex    =   regexp.MustCompile(`(?:input[.]voltage[.]nominal:(?:\s)(.*))`)
-	outputCurrentRegex          =   regexp.MustCompile(`(?:output[.]current:(?:\s)(.*))`)
-	outputFrequencyRegex        =   regexp.MustCompile(`(?:output[.]frequency:(?:\s)(.*))`)
-	outputVoltageRegex          =   regexp.MustCompile(`(?:output[.]voltage:(?:\s)(.*))`)
-	outputVoltageNominalRegex   =   regexp.MustCompile(`(?:output[.]voltage[.]nominal:(?:\s)(.*))`)
-	upsLoadRegex                =   regexp.MustCompile(`(?:ups[.]load:(?:\s)(.*))`)
-	upsPowerNominalRegex        =   regexp.MustCompile(`(?:ups[.]power[.]nominal:(?:\s)(.*))`)
-	upsStatusRegex              =   regexp.MustCompile(`(?:ups[.]status:(?:\s)(.*))`)
-	upsTempRegex                =   regexp.MustCompile(`(?:ups[.]temperature:(?:\s)(.*))`)
+var (
+	batteryChargeRegex         = regexp.MustCompile(`(?:battery[.]charge:(?:\s)(.*))`)
+	batteryChargeLowRegex      = regexp.MustCompile(`(?:battery[.]charge.low:(?:\s)(.*))`)
+	batteryChargeWarningRegex  = regexp.MustCompile(`(?:battery[.]charge.warning:(?:\s)(.*))`)
+	batteryPacksRegex          = regexp.MustCompile(`(?:battery[.]packs:(?:\s)(.*))`)
+	batteryRuntimeRegex        = regexp.MustCompile(`(?:battery[.]runtime:(?:\s)(.*))`)
+	batteryRuntimeLowRegex     = regexp.MustCompile(`(?:battery[.]runtime.low:(?:\s)(.*))`)
+	batteryTemperatureRegex    = regexp.MustCompile(`(?:battery[.]temperature:(?:\s)(.*))`)
+	batteryVoltageRegex        = regexp.MustCompile(`(?:battery[.]voltage:(?:\s)(.*))`)
+	batteryVoltageNominalRegex = regexp.MustCompile(`(?:battery[.]voltage[.]nominal:(?:\s)(.*))`)
+	inputTransferLowRegex      = regexp.MustCompile(`(?:input[.]transfer.low:(?:\s)(.*))`)
+	inputTransferHighRegex     = regexp.MustCompile(`(?:input[.]transfer.high:(?:\s)(.*))`)
+	inputVoltageRegex          = regexp.MustCompile(`(?:input[.]voltage:(?:\s)(.*))`)
+	inputVoltageNominalRegex   = regexp.MustCompile(`(?:input[.]voltage[.]nominal:(?:\s)(.*))`)
+	outputCurrentRegex         = regexp.MustCompile(`(?:output[.]current:(?:\s)(.*))`)
+	outputFrequencyRegex       = regexp.MustCompile(`(?:output[.]frequency:(?:\s)(.*))`)
+	outputVoltageRegex         = regexp.MustCompile(`(?:output[.]voltage:(?:\s)(.*))`)
+	outputVoltageNominalRegex  = regexp.MustCompile(`(?:output[.]voltage[.]nominal:(?:\s)(.*))`)
+	upsLoadRegex               = regexp.MustCompile(`(?:ups[.]load:(?:\s)(.*))`)
+	upsPowerNominalRegex       = regexp.MustCompile(`(?:ups[.]power[.]nominal:(?:\s)(.*))`)
+	upsRealPowerNominalRegex   = regexp.MustCompile(`(?:ups[.]realpower[.]nominal:(?:\s)(.*))`)
+	upsStatusRegex             = regexp.MustCompile(`(?:ups[.]status:(?:\s)(.*))`)
+	upsTempRegex               = regexp.MustCompile(`(?:ups[.]temperature:(?:\s)(.*))`)
 )
+
 // NUT Gauges
 var (
 	batteryCharge = prometheus.NewGauge(prometheus.GaugeOpts{
@@ -114,22 +118,27 @@ var (
 		Name: "nut_output_voltage",
 		Help: "Current output voltage",
 	})
-	
+
 	outputVoltageNominal = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "nut_output_voltage_nominal",
 		Help: "Nominal output voltage",
 	})
-	
+
 	upsPowerNominal = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "nut_ups_power_nominal",
 		Help: "Nominal ups power",
 	})
-	
+
+	upsRealPowerNominal = prometheus.NewGauge(prometheus.GaugeOpts{
+		Name: "nut_ups_realpower_nominal",
+		Help: "Nominal ups realpower",
+	})
+
 	upsTemp = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "nut_ups_temp",
 		Help: "UPS Temperature (degrees C)",
 	})
-	
+
 	upsLoad = prometheus.NewGauge(prometheus.GaugeOpts{
 		Name: "nut_ups_load",
 		Help: "Current UPS load (percent)",
@@ -141,7 +150,7 @@ var (
 	})
 )
 
-func recordMetrics(upscBinary string, upsArg string){
+func recordMetrics(upscBinary string, upsArg string) {
 	prometheus.MustRegister(batteryCharge)
 	prometheus.MustRegister(batteryChargeLow)
 	prometheus.MustRegister(batteryChargeWarning)
@@ -161,17 +170,18 @@ func recordMetrics(upscBinary string, upsArg string){
 	prometheus.MustRegister(outputVoltageNominal)
 	prometheus.MustRegister(upsLoad)
 	prometheus.MustRegister(upsPowerNominal)
+	prometheus.MustRegister(upsRealPowerNominal)
 	prometheus.MustRegister(upsStatus)
 	prometheus.MustRegister(upsTemp)
 
-	go func(){
+	go func() {
 		for {
-			upsOutput, err := exec.Command(upscBinary , upsArg).Output()
-			
+			upsOutput, err := exec.Command(upscBinary, upsArg).Output()
+
 			if err != nil {
 				log.Fatal(err)
 			}
-			
+
 			if batteryChargeRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(batteryCharge)
 			} else {
@@ -227,7 +237,7 @@ func recordMetrics(upscBinary string, upsArg string){
 				batteryVoltageValue, _ := strconv.ParseFloat(batteryVoltageRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				batteryVoltage.Set(batteryVoltageValue)
 			}
-			
+
 			if batteryVoltageNominalRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(batteryVoltageNominal)
 			} else {
@@ -255,7 +265,7 @@ func recordMetrics(upscBinary string, upsArg string){
 				inputVoltageValue, _ := strconv.ParseFloat(inputVoltageRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				inputVoltage.Set(inputVoltageValue)
 			}
-			
+
 			if inputVoltageNominalRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(inputVoltageNominal)
 			} else {
@@ -281,64 +291,71 @@ func recordMetrics(upscBinary string, upsArg string){
 				prometheus.Unregister(outputVoltage)
 			} else {
 				outputVoltageValue, _ := strconv.ParseFloat(outputVoltageRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
-  				outputVoltage.Set(outputVoltageValue)
+				outputVoltage.Set(outputVoltageValue)
 			}
-			
+
 			if outputVoltageNominalRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(outputVoltageNominal)
 			} else {
 				outputVoltageNominalValue, _ := strconv.ParseFloat(outputVoltageNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				outputVoltageNominal.Set(outputVoltageNominalValue)
 			}
-			
+
 			if upsPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(upsPowerNominal)
 			} else {
 				upsPowerNominalValue, _ := strconv.ParseFloat(upsPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				upsPowerNominal.Set(upsPowerNominalValue)
 			}
-			
+
+			if upsRealPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
+				prometheus.Unregister(upsRealPowerNominal)
+			} else {
+				upsRealPowerNominalValue, _ := strconv.ParseFloat(upsRealPowerNominalRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				upsRealPowerNominal.Set(upsRealPowerNominalValue)
+			}
+
 			if upsTempRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(upsTemp)
 			} else {
-				upsTempValue, _ := strconv.ParseFloat(upsTempRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)	
-				upsTemp.Set(upsTempValue)	
+				upsTempValue, _ := strconv.ParseFloat(upsTempRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
+				upsTemp.Set(upsTempValue)
 			}
-			
+
 			if upsLoadRegex.FindAllStringSubmatch(string(upsOutput), -1) == nil {
 				prometheus.Unregister(upsLoad)
 			} else {
-				upsLoadValue, _ := strconv.ParseFloat(upsLoadRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)	
+				upsLoadValue, _ := strconv.ParseFloat(upsLoadRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1], 64)
 				upsLoad.Set(upsLoadValue)
 			}
-			
-			upsStatusValue := upsStatusRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1]	
-			
+
+			upsStatusValue := upsStatusRegex.FindAllStringSubmatch(string(upsOutput), -1)[0][1]
+
 			switch upsStatusValue {
-				case "CAL":
-            		upsStatus.Set(0)
-				case "TRIM":
-					upsStatus.Set(1)
-				case "BOOST":
-					upsStatus.Set(2)
-				case "OL":
-					upsStatus.Set(3)
-				case "OB":
-					upsStatus.Set(4)
-				case "OVER":
-					upsStatus.Set(5)
-				case "LB":
-					upsStatus.Set(6)
-				case "RB":
-					upsStatus.Set(7)
-				case "BYPASS":
-					upsStatus.Set(8)
-				case "OFF":
-					upsStatus.Set(9)
-				case "CHRG":
-					upsStatus.Set(10)
-				case "DISCHRG":
-					upsStatus.Set(11)
+			case "CAL":
+				upsStatus.Set(0)
+			case "TRIM":
+				upsStatus.Set(1)
+			case "BOOST":
+				upsStatus.Set(2)
+			case "OL":
+				upsStatus.Set(3)
+			case "OB":
+				upsStatus.Set(4)
+			case "OVER":
+				upsStatus.Set(5)
+			case "LB":
+				upsStatus.Set(6)
+			case "RB":
+				upsStatus.Set(7)
+			case "BYPASS":
+				upsStatus.Set(8)
+			case "OFF":
+				upsStatus.Set(9)
+			case "CHRG":
+				upsStatus.Set(10)
+			case "DISCHRG":
+				upsStatus.Set(11)
 			}
 			time.Sleep(5 * time.Second)
 		}
@@ -346,17 +363,17 @@ func recordMetrics(upscBinary string, upsArg string){
 }
 
 func main() {
-	upsArg   := flag.String("ups", "none", "ups name managed by nut")
-	portArg  := flag.Int("port", 8100, "port number")
-	upscArg  := flag.String("upsc", "/bin/upsc", "upsc path")
-    flag.Parse()
+	upsArg := flag.String("ups", "none", "ups name managed by nut")
+	portArg := flag.Int("port", 8100, "port number")
+	upscArg := flag.String("upsc", "/bin/upsc", "upsc path")
+	flag.Parse()
 
 	var listenAddr = fmt.Sprintf(":%d", *portArg)
 	recordMetrics(*upscArg, *upsArg)
-    
-	log.Infoln("Starting NUT exporter on ups", *upsArg )	
+
+	log.Infoln("Starting NUT exporter on ups", *upsArg)
 	http.Handle("/metrics", promhttp.Handler())
-    
+
 	log.Infoln("NUT exporter started on port", *portArg)
-	http.ListenAndServe(listenAddr, nil)	
+	http.ListenAndServe(listenAddr, nil)
 }
